@@ -270,15 +270,30 @@ class Tron extends \IEXBase\TronAPI\Tron
     }
     
     /**
-     * 生成钱包地址
+     * 检查GMP扩展是否可用
      * 
-     * 使用椭圆曲线加密库生成新钱包
-     *
-     * @return array 包含私钥和地址的数组
      * @throws TronException
+     * @return void
+     */
+    protected function checkGmpExtension(): void
+    {
+        if (!extension_loaded('gmp')) {
+            throw new TronException(
+                '使用钱包功能需要GMP扩展。请安装PHP GMP扩展，或者在composer.json中添加 {"config": {"platform": {"ext-gmp": "1.0.0"}}} 来绕过此检查。'
+            );
+        }
+    }
+    
+    /**
+     * 生成新的波场钱包 (地址和私钥)
+     *
+     * @throws TronException
+     * @return array 包含私钥和地址的数组
      */
     public function generateWallet(): array
     {
+        $this->checkGmpExtension();
+        
         try {
             // 使用父类的方法生成地址
             $tronAddress = parent::generateAddress();
@@ -296,9 +311,7 @@ class Tron extends \IEXBase\TronAPI\Tron
     }
     
     /**
-     * 根据私钥获取地址
-     *
-     * 使用椭圆曲线加密库从私钥获取地址
+     * 从私钥获取地址
      *
      * @param string $privateKey 私钥
      * @return array 包含地址的数组
@@ -306,6 +319,8 @@ class Tron extends \IEXBase\TronAPI\Tron
      */
     public function getAddressFromPrivateKey(string $privateKey): array
     {
+        $this->checkGmpExtension();
+        
         try {
             // 验证私钥格式
             if (!preg_match('/^[0-9a-f]{64}$/i', $privateKey)) {
@@ -342,6 +357,9 @@ class Tron extends \IEXBase\TronAPI\Tron
      */
     public function validatePrivateKey(string $privateKey, string $address): bool
     {
+        $this->checkGmpExtension();
+        
+        $calcAddress = '';
         try {
             $addressInfo = $this->getAddressFromPrivateKey($privateKey);
             return $addressInfo['address'] === $address;

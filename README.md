@@ -24,10 +24,12 @@ composer require zhifu/tron-api
 支持以下PHP版本：
 
 * PHP 7.4 及以上
-* 必须安装GMP扩展（用于钱包功能）
 * 必须安装BCMath扩展（用于高精度计算）
+* 使用钱包功能时需要安装GMP扩展（用于私钥生成和地址验证）
 
-### 安装GMP扩展
+### 安装GMP扩展（可选，仅用于钱包功能）
+
+如果您需要使用钱包创建、导入和验证功能，则需要安装GMP扩展：
 
 对于Ubuntu/Debian：
 ```bash
@@ -44,6 +46,20 @@ sudo systemctl restart httpd  # 或 php-fpm
 对于macOS (使用Homebrew)：
 ```bash
 brew install php@7.4-gmp
+```
+
+### 跳过GMP扩展检查（不推荐）
+
+如果您确定不会使用钱包功能，可以在composer.json中添加以下配置来绕过GMP扩展检查：
+
+```json
+{
+    "config": {
+        "platform": {
+            "ext-gmp": "1.0.0"
+        }
+    }
+}
 ```
 
 ## 基本用法

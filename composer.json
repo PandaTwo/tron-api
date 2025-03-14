@@ -28,8 +28,10 @@
         "iexbase/tron-api": "^5.0",
         "guzzlehttp/guzzle": "^7.0",
         "ext-json": "*",
-        "ext-bcmath": "*",
-        "ext-gmp": "*"
+        "ext-bcmath": "*"
+    },
+    "suggest": {
+        "ext-gmp": "需要GMP扩展来使用钱包创建和地址生成功能"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.0"
