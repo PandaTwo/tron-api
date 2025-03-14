@@ -1,0 +1,55 @@
+{
+    "name": "zhifu/tron-api",
+    "description": "增强版波场（TRON）API接口库，提供更完善的功能和更稳定的表现，简化TRON区块链应用开发",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "PandaIT",
+            "email": "js.zhoukang@gmail.com"
+        }
+    ],
+    "keywords": [
+        "tron",
+        "tron-lib",
+        "tron-php",
+        "tron-api",
+        "zhifu",
+        "trc20",
+        "blockchain",
+        "usdt",
+        "staking",
+        "energy",
+        "波场",
+        "区块链"
+    ],
+    "require": {
+        "php": ">=7.4",
+        "iexbase/tron-api": "^5.0",
+        "guzzlehttp/guzzle": "^7.0",
+        "ext-json": "*",
+        "ext-bcmath": "*",
+        "ext-gmp": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zhifu\\TronAPI\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Zhifu\\TronAPI\\Test\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "platform-check": false
+    },
+    "minimum-stability": "stable",
+    "scripts": {
+        "test": "phpunit"
+    }
+}
