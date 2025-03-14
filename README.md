@@ -16,7 +16,11 @@
 ## 安装
 
 ```bash
+# 标准安装
 composer require zhifu/tron-api
+
+# 如果安装过程中遇到扩展或PHP版本兼容性问题，可以使用以下命令忽略平台要求
+composer require zhifu/tron-api --ignore-platform-reqs
 ```
 
 如果遇到依赖问题，有以下几种解决方案：
