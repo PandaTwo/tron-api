@@ -48,7 +48,10 @@
     },
     "config": {
         "sort-packages": true,
-        "platform-check": false
+        "platform-check": false,
+        "platform": {
+            "ext-gmp": "1.0.0"
+        }
     },
     "minimum-stability": "stable",
     "scripts": {

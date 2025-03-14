@@ -19,6 +19,41 @@
 composer require zhifu/tron-api
 ```
 
+如果遇到GMP扩展依赖问题，有两种解决方案：
+
+### 方案1：安装GMP扩展（推荐）
+
+这是最佳方案，可以使用所有功能：
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install php7.4-gmp
+sudo service apache2 restart
+
+# CentOS/RHEL
+sudo yum install php-gmp
+sudo systemctl restart httpd
+
+# macOS (使用Homebrew)
+brew install php@7.4-gmp
+```
+
+### 方案2：在项目中绕过GMP扩展检查
+
+如果无法安装GMP扩展，可以在项目的`composer.json`中添加如下配置：
+
+```json
+{
+    "config": {
+        "platform": {
+            "ext-gmp": "1.0.0"
+        }
+    }
+}
+```
+
+注意：此方案只能使用基本功能，不能使用钱包创建、导入和验证等需要GMP扩展的功能。
+
 ## 要求
 
 支持以下PHP版本：
