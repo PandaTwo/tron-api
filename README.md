@@ -19,9 +19,11 @@
 composer require zhifu/tron-api
 ```
 
-如果遇到GMP扩展依赖问题，有两种解决方案：
+如果遇到依赖问题，有以下几种解决方案：
 
-### 方案1：安装GMP扩展（推荐）
+### GMP扩展问题
+
+#### 方案1：安装GMP扩展（推荐）
 
 这是最佳方案，可以使用所有功能：
 
@@ -38,7 +40,7 @@ sudo systemctl restart httpd
 brew install php@7.4-gmp
 ```
 
-### 方案2：在项目中绕过GMP扩展检查
+#### 方案2：在项目中绕过GMP扩展检查
 
 如果无法安装GMP扩展，可以在项目的`composer.json`中添加如下配置：
 
@@ -52,7 +54,31 @@ brew install php@7.4-gmp
 }
 ```
 
-注意：此方案只能使用基本功能，不能使用钱包创建、导入和验证等需要GMP扩展的功能。
+### PHP版本兼容性问题
+
+本库支持PHP 7.4及以上版本。对于底层依赖`iexbase/tron-api`，我们兼容3.x, 4.x和5.x版本：
+
+- 使用PHP 7.4：会自动选择兼容的3.x或4.x版本
+- 使用PHP 8.0+：会优先使用最新的5.x版本
+
+如果安装时遇到PHP版本兼容性问题，可以尝试以下方案：
+
+```bash
+# 方案1：在安装时忽略平台要求（不推荐）
+composer require zhifu/tron-api --ignore-platform-reqs
+
+# 方案2：在项目的composer.json中设置platform配置（推荐）
+# 在composer.json中添加：
+{
+    "config": {
+        "platform": {
+            "php": "7.4.33"
+        }
+    }
+}
+```
+
+注意：方案2会影响所有依赖的安装，确保这符合您的项目需求。
 
 ## 要求
 
