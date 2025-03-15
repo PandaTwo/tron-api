@@ -12,6 +12,7 @@
 * **交易监控机制** - 实现自动充值检测和通知
 * **完善的错误处理** - 提供更详细的错误信息和异常处理
 * **丰富的示例代码** - 提供多种场景的实际应用示例
+* **内存优化管理** - 自动清理缓存，适合高频调用和长时间运行的应用
 
 ## 安装
 
@@ -124,6 +125,59 @@ brew install php@7.4-gmp
             "ext-gmp": "1.0.0"
         }
     }
+}
+```
+
+## 内存优化和性能管理
+
+本库针对高频调用和长时间运行的场景进行了内存优化，特别是TRC20合约操作。
+
+### 自动缓存清理
+
+从v1.0.5版本开始，TRC20合约转账操作会自动清理不需要的缓存数据：
+
+```php
+// 无需手动管理缓存，转账后会自动清理
+$contract = $tron->contract('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t');
+$result = $contract->transfer('接收方地址', 10.5);
+// 此时已自动清理缓存，释放内存
+```
+
+### 禁用自动清理
+
+在某些特殊场景下，您可能希望禁用自动清理功能：
+
+```php
+// 禁用自动清理功能
+\Zhifu\TronAPI\TRC20Contract::setAutoCleaning(false);
+
+// 执行多次操作...
+
+// 操作完成后手动清理
+\Zhifu\TronAPI\TRC20Contract::clearCache();
+```
+
+### 分批处理大批量操作
+
+对于大批量转账或查询，库已内置分批处理机制：
+
+```php
+// 批量转账时可以控制每批大小，默认为5
+$contract = $tron->contract($usdtContract);
+$results = $contract->batchTransfer($transfers, 3); // 每批处理3个转账
+
+// 批量查询余额时也可以控制每批大小，默认为20
+$balances = $contract->batchBalanceOf($addresses, true, 10); // 每批处理10个地址
+```
+
+### 长时间运行的应用
+
+对于长时间运行的脚本或应用（如充值监控服务），建议定期手动清理：
+
+```php
+// 每处理100个区块后清理一次
+if ($blockCount % 100 === 0) {
+    \Zhifu\TronAPI\TRC20Contract::clearCache();
 }
 ```
 

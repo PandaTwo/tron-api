@@ -39,6 +39,25 @@ class TRC20Contract extends \IEXBase\TronAPI\TRC20Contract
     const MAX_CACHE_ENTRIES = 50;
     
     /**
+     * 是否自动清理缓存
+     * 默认为true，可以通过setAutoCleaning(false)关闭
+     * 
+     * @var bool
+     */
+    protected static $autoCleaning = true;
+    
+    /**
+     * 设置是否自动清理缓存
+     * 
+     * @param bool $enabled 是否启用自动清理
+     * @return void
+     */
+    public static function setAutoCleaning(bool $enabled): void
+    {
+        self::$autoCleaning = $enabled;
+    }
+    
+    /**
      * 获取代币名称（带缓存）
      *
      * @return string
@@ -121,6 +140,69 @@ class TRC20Contract extends \IEXBase\TronAPI\TRC20Contract
     }
     
     /**
+     * 转账后清理资源
+     * 主动释放内存并触发垃圾回收
+     * 
+     * @return void
+     */
+    public function cleanupAfterTransfer(): void
+    {
+        // 清理当前合约的缓存（通常只需保留当前使用的合约信息）
+        if (self::$autoCleaning) {
+            $currentContract = $this->getContractAddress();
+            
+            // 保留当前合约的缓存，清除其他合约的缓存
+            foreach (self::$decimalsCache as $address => $value) {
+                if ($address !== $currentContract) {
+                    unset(self::$decimalsCache[$address]);
+                }
+            }
+            
+            foreach (self::$nameCache as $address => $value) {
+                if ($address !== $currentContract) {
+                    unset(self::$nameCache[$address]);
+                }
+            }
+            
+            foreach (self::$symbolCache as $address => $value) {
+                if ($address !== $currentContract) {
+                    unset(self::$symbolCache[$address]);
+                }
+            }
+        }
+        
+        // 主动触发垃圾回收
+        if (function_exists('gc_collect_cycles')) {
+            gc_collect_cycles();
+        }
+    }
+    
+    /**
+     * 重写父类的transfer方法，增加自动清理功能
+     * 
+     * @param string $to 接收地址
+     * @param float|string|int $amount 转账金额
+     * @param string|null $from 发送地址，默认为当前设置的地址
+     * @return array 交易结果
+     */
+    public function transfer(string $to, $amount, ?string $from = null): array
+    {
+        try {
+            // 调用父类的transfer方法
+            $result = parent::transfer($to, $amount, $from);
+            
+            // 转账后自动清理资源
+            $this->cleanupAfterTransfer();
+            
+            return $result;
+        } catch (\Exception $e) {
+            // 即使发生异常也尝试清理资源
+            $this->cleanupAfterTransfer();
+            throw $e;
+        }
+    }
+    
+    /**
      * 获取代币余额
      * 重写父类方法但保持签名一致
      * 优化内存使用
@@ -185,6 +267,9 @@ class TRC20Contract extends \IEXBase\TronAPI\TRC20Contract
             }
         }
         
+        // 批量操作完成后自动清理
+        $this->cleanupAfterTransfer();
+        
         return $results;
     }
     
@@ -225,7 +310,7 @@ class TRC20Contract extends \IEXBase\TronAPI\TRC20Contract
                     // 转换金额为合约需要的数值
                     $amount = bcmul($receiver['amount'], $multiplier, 0);
                     
-                    // 执行转账
+                    // 执行转账 (此处会自动调用cleanupAfterTransfer)
                     $result = $this->transfer($receiver['to'], $amount);
                     
                     $results[] = [
