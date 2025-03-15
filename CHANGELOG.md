@@ -1,7 +1,7 @@
 # Change Log
 所有显著变化都将记录在此文件中。
 
-## [v1.2.0] - 2024-03-XX
+## [v1.2.0] - 2024-03-18
 ### 重构
 - 重构项目结构，将lib目录代码迁移至src目录
 - 简化命名空间，从`Zhifu\TronAPI\Lib\IEXBase`变更为`Zhifu\TronAPI`
