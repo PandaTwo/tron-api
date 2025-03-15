@@ -56,6 +56,12 @@
     },
     "minimum-stability": "stable",
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit",
+        "post-install-cmd": [
+            "php scripts/patch-vendor.php"
+        ],
+        "post-update-cmd": [
+            "php scripts/patch-vendor.php"
+        ]
     }
 }

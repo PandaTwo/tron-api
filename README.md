@@ -13,6 +13,7 @@
 * **完善的错误处理** - 提供更详细的错误信息和异常处理
 * **丰富的示例代码** - 提供多种场景的实际应用示例
 * **内存优化管理** - 自动清理缓存，适合高频调用和长时间运行的应用
+* **底层库优化** - 自动修补底层库的内存泄漏问题
 
 ## 安装
 
@@ -23,6 +24,20 @@ composer require zhifu/tron-api
 # 如果安装过程中遇到扩展或PHP版本兼容性问题，可以使用以下命令忽略平台要求
 composer require zhifu/tron-api --ignore-platform-reqs
 ```
+
+### 底层库内存优化
+
+从v1.0.6版本开始，我们添加了自动修补脚本来解决底层`iexbase/tron-api`库的内存泄漏问题：
+
+1. 安装或更新时会自动修补底层库
+2. 如果没有自动修补，可以手动运行修补脚本：
+   ```bash
+   php vendor/zhifu/tron-api/scripts/patch-vendor.php
+   ```
+3. 如果仍然遇到内存问题，可以尝试增加PHP内存限制：
+   ```php
+   ini_set('memory_limit', '2G');
+   ```
 
 如果遇到依赖问题，有以下几种解决方案：
 
