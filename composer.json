@@ -29,7 +29,7 @@
         "comely-io/data-types": "^1.0",
         "kornrunner/secp256k1": "^0.2",
         "simplito/elliptic-php": "^1.0",
-        "PandaTwo/web3.php": "^0.1.4",
+        "pandatwo/web3.php": "^0.1.4",
         "ext-json": "*",
         "ext-bcmath": "*"
     },

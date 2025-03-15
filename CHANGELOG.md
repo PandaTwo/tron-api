@@ -9,7 +9,7 @@
 - 修复BcNumber类中的divide方法调用问题
 - 提高代码可读性和可维护性
 - 移除冗余目录和文件
-- 使用自己fork的`PandaTwo/web3.php`替代官方包，确保长期可用性
+- 使用自己fork的`pandatwo/web3.php`替代官方包，确保长期可用性
 
 ## [v1.1.0] - 2023-06-XX
 ### 新增
