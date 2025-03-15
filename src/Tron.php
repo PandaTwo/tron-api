@@ -8,7 +8,7 @@ use Zhifu\TronAPI\Provider\HttpProvider;
 /**
  * 增强版Tron API主类
  */
-class Tron extends \IEXBase\TronAPI\Tron
+class Tron extends TronBase
 {
     /**
      * 节点API版本

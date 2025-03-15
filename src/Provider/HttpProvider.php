@@ -1,67 +1,233 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Zhifu\TronAPI\Provider;
 
-/**
- * 扩展的HTTP提供者类
- */
-class HttpProvider extends \IEXBase\TronAPI\Provider\HttpProvider
+use GuzzleHttp\{Psr7\Request, Client, ClientInterface};
+use Psr\Http\Message\StreamInterface;
+use Zhifu\TronAPI\Exception\{NotFoundException, TronException};
+use Zhifu\TronAPI\Support\Utils;
+
+class HttpProvider implements HttpProviderInterface
 {
+    /**
+     * HTTP Client Handler
+     *
+     * @var ClientInterface.
+     */
+    protected $httpClient;
+
+    /**
+     * Server or RPC URL
+     *
+     * @var string
+    */
+    protected $host;
+
+    /**
+     * Waiting time
+     *
+     * @var int
+     */
+    protected $timeout;
+
+    /**
+     * Username for authentication
+     *
+     * @var string
+     */
+    protected $user;
+
+    /**
+     * Password for authentication
+     *
+     * @var string
+     */
+    protected $password;
+
+    /**
+     * Headers for auth
+     *
+     * @var array
+     */
+    protected $headers = [];
+
+    /**
+     * Status Page
+     *
+     * @var string
+     */
+    protected $statusPage = '/';
+
     /**
      * TRON API密钥
      *
      * @var string|null
      */
     protected $apiKey = null;
-    
+
     /**
-     * 增强的构造函数，支持设置额外的配置选项
+     * Create a new HttpProvider instance
      *
      * @param string $host
      * @param int $timeout
-     * @param array $options 额外的选项
-     * @param string|null $apiKey TRON API密钥
+     * @param string $user
+     * @param string $password
+     * @param array $headers
+     * @param string $statusPage
+     * @throws TronException
      */
-    public function __construct(string $host, int $timeout = 30000, array $options = [], ?string $apiKey = null)
+    public function __construct(string $host, int $timeout = 30000,
+                                $user = false, $password = false,
+                                array $headers = [], string $statusPage = '/')
     {
-        // 调用父类构造函数
-        parent::__construct($host, $timeout);
-        
-        // 设置API密钥
-        if ($apiKey !== null) {
-            $this->setApiKey($apiKey);
+        if(!Utils::isValidUrl($host)) {
+            throw new TronException('Invalid URL provided to HttpProvider');
         }
-        
-        // 增加额外的配置选项处理
-        if (!empty($options)) {
-            foreach ($options as $key => $value) {
-                if (property_exists($this, $key)) {
-                    $this->$key = $value;
-                }
-            }
+
+        $this->host = $host;
+        $this->timeout = $timeout;
+        $this->user = $user;
+        $this->password = $password;
+        $this->statusPage = $statusPage;
+        $this->headers = $headers;
+
+        $this->httpClient = new Client([
+            'base_uri'  =>  $host,
+            'timeout'   =>  $timeout,
+            'auth'      =>  $user && $password ? [$user, $password] : null,
+            'headers'   =>  $headers
+        ]);
+    }
+
+    /**
+     * Change the status page
+     *
+     * @param string $page
+     */
+    public function setStatusPage(string $page = '/'): void
+    {
+        $this->statusPage = $page;
+    }
+
+    /**
+     * Check connection
+     *
+     * @return bool
+     */
+    public function isConnected() : bool
+    {
+        try {
+            $request = new Request('GET', $this->statusPage);
+            $response = $this->httpClient->send($request);
+
+            return $response->getStatusCode() == 200;
+        } catch (\Exception $e) {
+            return false;
         }
     }
-    
+
     /**
-     * 设置TRON API密钥
+     * Getting host
+     *
+     * @return string
+     */
+    public function getHost(): string
+    {
+        return $this->host;
+    }
+
+    /**
+     * Getting timeout
+     *
+     * @return int
+     */
+    public function getTimeout(): int
+    {
+        return $this->timeout;
+    }
+
+    /**
+     * Get the User
+     *
+     * @return string|null
+     */
+    public function getUser(): ?string
+    {
+        return is_string($this->user) ? $this->user : null;
+    }
+
+    /**
+     * @param string $url
+     * @param array $payload
+     * @param string $method
+     * @return array
+     * @throws TronException
+     */
+    public function request($url, array $payload = [], string $method = 'get'): array
+    {
+        try {
+            $request = new Request($method, $url);
+            $response = $this->httpClient->send($request, ['json' => $payload]);
+            return $this->decodeBody($response->getBody(), $response->getStatusCode());
+        } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+            throw new TronException($e->getMessage());
+        }
+    }
+
+    /**
+     * @param StreamInterface $stream
+     * @param int $status
+     * @return array
+     * @throws NotFoundException
+     * @throws TronException
+     */
+    protected function decodeBody(StreamInterface $stream, int $status): array
+    {
+        $decodedBody = json_decode($stream->getContents(), true);
+
+        if((string)$status == '404') {
+            throw new NotFoundException('Page not found');
+        }
+
+        if((string)$status == '400') {
+            if(isset($decodedBody['Error'])) {
+                throw new TronException($decodedBody['Error']);
+            }
+
+            return $decodedBody;
+        }
+
+        return $decodedBody;
+    }
+
+    /**
+     * 设置API密钥
      *
      * @param string $apiKey
-     * @return $this
+     * @return self
      */
     public function setApiKey(string $apiKey): self
     {
         $this->apiKey = $apiKey;
         
-        // 将API密钥添加到请求头中
-        if (!empty($apiKey)) {
-            $this->headers['TRON-PRO-API-KEY'] = $apiKey;
+        // 更新headers中的API密钥
+        $this->headers['TRON-PRO-API-KEY'] = $apiKey;
+        
+        // 如果httpClient已经初始化，更新其配置
+        if ($this->httpClient) {
+            $this->httpClient = new Client([
+                'base_uri'  =>  $this->host,
+                'timeout'   =>  $this->timeout,
+                'auth'      =>  $this->user && $this->password ? [$this->user, $this->password] : null,
+                'headers'   =>  $this->headers
+            ]);
         }
         
         return $this;
     }
     
     /**
-     * 获取当前设置的API密钥
+     * 获取API密钥
      *
      * @return string|null
      */
@@ -69,65 +235,4 @@ class HttpProvider extends \IEXBase\TronAPI\Provider\HttpProvider
     {
         return $this->apiKey;
     }
-    
-    /**
-     * 增强的请求重试功能
-     *
-     * @param string $url 接口路径
-     * @param array $payload 请求参数
-     * @param string $method 请求方法
-     * @param int $maxRetries 最大重试次数
-     * @return array
-     */
-    public function requestWithRetry($url, array $payload = [], string $method = 'get', int $maxRetries = 3)
-    {
-        $attempts = 0;
-        $lastException = null;
-        
-        while ($attempts < $maxRetries) {
-            try {
-                return $this->request($url, $payload, $method);
-            } catch (\Exception $e) {
-                $lastException = $e;
-                $attempts++;
-                // 指数退避重试
-                usleep(min(pow(2, $attempts) * 100000, 1000000));
-            }
-        }
-        
-        // 如果全部尝试都失败，抛出最后捕获的异常
-        throw $lastException;
-    }
-    
-    /**
-     * 重写父类的请求方法，确保在每个请求中包含API密钥
-     *
-     * @param string $url
-     * @param array $payload
-     * @param string $method
-     * @return array
-     * @throws \IEXBase\TronAPI\Exception\TronException
-     */
-    public function request($url, array $payload = [], string $method = 'get'): array
-    {
-        // 确保API密钥被添加到请求头中
-        if (!empty($this->apiKey) && !isset($this->headers['TRON-PRO-API-KEY'])) {
-            $this->headers['TRON-PRO-API-KEY'] = $this->apiKey;
-        }
-        
-        // 调用父类的请求方法
-        return parent::request($url, $payload, $method);
-    }
-    
-    /**
-     * 设置请求超时时间
-     *
-     * @param int $timeout
-     * @return $this
-     */
-    public function setTimeout(int $timeout): self
-    {
-        $this->timeout = $timeout;
-        return $this;
-    }
-} 
+}

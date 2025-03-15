@@ -25,8 +25,11 @@
     ],
     "require": {
         "php": ">=7.4",
-        "iexbase/tron-api": "^3.0 || ^4.0 || ^5.0",
         "guzzlehttp/guzzle": "^7.0",
+        "comely-io/data-types": "^1.0",
+        "kornrunner/secp256k1": "^0.2",
+        "simplito/elliptic-php": "^1.0",
+        "web3/web3.php": "^0.1.4",
         "ext-json": "*",
         "ext-bcmath": "*"
     },
@@ -38,7 +41,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Zhifu\\TronAPI\\": "src/"
+            "Zhifu\\TronAPI\\": "src/",
+            "Comely\\DataTypes\\": "src/Support/"
         }
     },
     "autoload-dev": {
@@ -56,12 +60,6 @@
     },
     "minimum-stability": "stable",
     "scripts": {
-        "test": "phpunit",
-        "post-install-cmd": [
-            "php scripts/patch-vendor.php"
-        ],
-        "post-update-cmd": [
-            "php scripts/patch-vendor.php"
-        ]
+        "test": "phpunit"
     }
 }
